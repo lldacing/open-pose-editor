@@ -21,4 +21,4 @@ const data0: [number, number, number][][] = data
 
 const int32Buffer = new Int32Array(data0.flat(2))
 fs.writeFileSync('src/poses/data.bin', Buffer.from(int32Buffer.buffer))
-console.log(data0.length, int32Buffer.byteLength)
+console.debug(data0.length, int32Buffer.byteLength)

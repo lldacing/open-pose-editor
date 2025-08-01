@@ -6,7 +6,7 @@ import Slider from '../Slider'
 import { BodyEditor } from '../../editor'
 import useForceUpdate from '../../hooks/useFoceUpdate'
 import i18n from '../../i18n'
-import { BodyControlor } from '../../body'
+import { BodyController } from '../../body'
 
 const { PopoverContent, IconButton, PopoverArrow, Input } = classes
 
@@ -76,6 +76,7 @@ const Slider2: React.FC<{
             ></Slider>
             <input
                 className={Input}
+                type={type === 'int' ? 'number' : 'text'}
                 style={{
                     marginInlineStart: 10,
                     width: 60,
@@ -88,13 +89,26 @@ const Slider2: React.FC<{
                     const value = event.target.value
 
                     setInputValue(value)
+
+                    // 当输入有效数字时，同时更新slider
+                    const numValue = parseFloat(value)
+                    if (!isNaN(numValue)) {
+                        // 确保数值在范围内
+                        const clampedValue = Math.max(Math.min(numValue, range[1]), range[0])
+                        if (type == 'int') {
+                            onChange?.(Math.round(clampedValue))
+                        } else {
+                            onChange?.(clampedValue)
+                        }
+                        forceUpdate()
+                    }
                 }}
                 onBlur={() => {
                     try {
                         let v = parseFloat(inputValue)
                         if (isNaN(v)) throw 'Is NaN'
                         v = Math.max(Math.min(v, range[1]), range[0])
-                        console.log(v)
+                        console.debug(v)
                         onChange?.(v)
                     } catch (error) {
                         console.log('invalid input')
@@ -106,7 +120,7 @@ const Slider2: React.FC<{
     )
 }
 
-function GetCameraParamControlor(editor: BodyEditor) {
+function GetCameraParamController(editor: BodyEditor) {
     const CameraParamsInit = {
         OutputWidth: { type: 'int', range: [128, 3000], name: i18n.t('Width') },
         OutputHeight: {
@@ -148,7 +162,7 @@ function GetCameraParamControlor(editor: BodyEditor) {
     })
 }
 
-function GetBodyParamControlor(editor: BodyEditor) {
+function GetBodyParamController(editor: BodyEditor) {
     const BodyParamsInit = {
         BoneThickness: { range: [0.1, 3], name: i18n.t('Bone Thickness') },
         HeadSize: { range: [0.1, 100], name: i18n.t('Head Size') },
@@ -168,20 +182,20 @@ function GetBodyParamControlor(editor: BodyEditor) {
 
     function PushExecuteBodyParamsCommand(
         editor: BodyEditor,
-        controlor: BodyControlor,
+        controller: BodyController,
         name: keyof typeof BodyParamsInit,
         oldValue: number,
         value: number
     ) {
-        console.log(oldValue, value)
+        console.debug(oldValue, value)
         const cmd = {
             execute: () => {
-                controlor[name] = value
-                controlor.Update()
+                controller[name] = value
+                controller.Update()
             },
             undo: () => {
-                controlor[name] = oldValue
-                controlor.Update()
+                controller[name] = oldValue
+                controller.Update()
             },
         }
         cmd.execute()
@@ -189,19 +203,19 @@ function GetBodyParamControlor(editor: BodyEditor) {
     }
 
     let currentBody = editor.getSelectedBody()
-    let currentControlor: BodyControlor | null = currentBody
-        ? new BodyControlor(currentBody)
+    let currentController: BodyController | null = currentBody
+        ? new BodyController(currentBody)
         : null
 
-    const getCurrentControlor = () => {
+    const getCurrentController = () => {
         const body = editor.getSelectedBody()
 
         if (body !== currentBody) {
             currentBody = body
-            currentControlor = body ? new BodyControlor(body) : null
+            currentController = body ? new BodyController(body) : null
         }
 
-        return currentControlor
+        return currentController
     }
 
     let oldValue = 0
@@ -223,55 +237,55 @@ function GetBodyParamControlor(editor: BodyEditor) {
             range,
             getValue: () => {
                 const paramName = _paramName as keyof typeof BodyParamsInit
-                const controlor = getCurrentControlor()
-                if (controlor) {
-                    return controlor[paramName]
+                const controller = getCurrentController()
+                if (controller) {
+                    return controller[paramName]
                 }
                 return -1
             },
             onChange(value: number) {
                 const paramName = _paramName as keyof typeof BodyParamsInit
-                const controlor = getCurrentControlor()
+                const controller = getCurrentController()
 
-                if (controlor) {
+                if (controller) {
                     // the first time
-                    if (changing == false) oldValue = controlor[paramName]
+                    if (!changing) oldValue = controller[paramName]
                     changing = true
-                    controlor[paramName] = value
+                    controller[paramName] = value
                 }
             },
             onValueCommit(value: number) {
                 const paramName = _paramName as keyof typeof BodyParamsInit
-                const controlor = getCurrentControlor()
+                const controller = getCurrentController()
 
-                if (controlor) {
+                if (controller) {
                     changing = false
                     PushExecuteBodyParamsCommand(
                         editor,
-                        controlor,
+                        controller,
                         paramName,
                         oldValue,
                         value
                     )
-                    controlor[paramName] = value
+                    controller[paramName] = value
                 }
             },
         }
     })
 }
 
-const ControlorPopover: React.FC<{
+const ControllerPopover: React.FC<{
     editor: BodyEditor
     style?: React.CSSProperties
 }> = ({ editor, style }) => {
     const forceUpdate = useForceUpdate()
-    const [open, setOpen] = useState(true)
+    const [open, setOpen] = useState(false)
 
-    const cameraParamControlor = useMemo(() => {
-        return GetCameraParamControlor(editor)
+    const cameraParamController = useMemo(() => {
+        return GetCameraParamController(editor)
     }, [editor])
-    const bodyParamControlor = useMemo(() => {
-        return GetBodyParamControlor(editor)
+    const bodyParamController = useMemo(() => {
+        return GetBodyParamController(editor)
     }, [editor])
 
     const [bodySelected, setBodySelected] = useState(false)
@@ -310,7 +324,7 @@ const ControlorPopover: React.FC<{
                             gap: 10,
                         }}
                     >
-                        {cameraParamControlor.map((props, index) => (
+                        {cameraParamController.map((props, index) => (
                             <Slider2
                                 key={index}
                                 {...props}
@@ -328,7 +342,7 @@ const ControlorPopover: React.FC<{
                                 >
                                     {i18n.t('Body Parameters')}
                                 </div>
-                                {bodyParamControlor.map((props, index) => (
+                                {bodyParamController.map((props, index) => (
                                     <Slider2
                                         key={index}
                                         {...props}
@@ -345,4 +359,4 @@ const ControlorPopover: React.FC<{
     )
 }
 
-export default ControlorPopover
+export default ControllerPopover

@@ -22,6 +22,7 @@ export function useBodyEditor(
     parent?: RefObject<HTMLDivElement>
 ) {
     const [editor, setEditor] = useState<BodyEditor>()
+    const [isModelLoaded, setIsModelLoaded] = useState(false)
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -44,6 +45,8 @@ export function useBodyEditor(
             // we have to check if the editor is null to avoid meaningless operations
             if (editor) {
                 await LoadBodyData()
+                // 设置模型加载完成状态
+                setIsModelLoaded(true)
                 editor?.ResetScene()
                 if (editor?.RestoreScene && location.hash) {
                     const rawData = decodeURIComponent(
@@ -63,7 +66,7 @@ export function useBodyEditor(
         }
     }, [])
 
-    return editor
+    return {editor, isModelLoaded}
 }
 
 export function useLanguageSelect() {

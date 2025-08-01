@@ -321,7 +321,7 @@ const MenubarDemo: React.FC<{
                 </Menubar.Portal>
             </Menubar.Menu>
 
-            <Menubar.Menu>
+            {/*<Menubar.Menu>
                 <Menubar.Trigger className={MenubarTrigger}>
                     {i18n.t('Feedback')}
                 </Menubar.Trigger>
@@ -350,8 +350,8 @@ const MenubarDemo: React.FC<{
                         </Menubar.Item>
                     </Menubar.Content>
                 </Menubar.Portal>
-            </Menubar.Menu>
-            <Menubar.Menu>
+            </Menubar.Menu>*/}
+            {/*<Menubar.Menu>
                 <Menubar.Trigger className={MenubarTrigger}>
                     Language
                 </Menubar.Trigger>
@@ -388,7 +388,7 @@ const MenubarDemo: React.FC<{
                         </Menubar.RadioGroup>
                     </Menubar.Content>
                 </Menubar.Portal>
-            </Menubar.Menu>
+            </Menubar.Menu>*/}
             <Menubar.Menu>
                 <Menubar.Trigger
                     className={classNames(MenubarTrigger, Blue)}

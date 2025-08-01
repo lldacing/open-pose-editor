@@ -6,7 +6,7 @@ import {
 } from '../../utils/transfer'
 import { DetectPosefromImage } from '../../utils/detect'
 
-import { BodyControlor } from '../../body'
+import { BodyController } from '../../body'
 
 import { GetLoading } from '../../components/Loading'
 import { BodyEditor } from '../../editor'
@@ -98,7 +98,7 @@ export class Helper {
             return
         }
         try {
-            const data = new BodyControlor(body).Get18keyPointsData()
+            const data = new BodyController(body).Get18keyPointsData()
             await CopyTextToClipboard(JSON.stringify(data, null, 4))
             ShowToast({ title: i18n.t('Copied to Clipboard') })
         } catch (error) {

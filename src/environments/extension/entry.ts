@@ -89,7 +89,7 @@ let isInitialized = false
 let isPaused = false
 
 onUiLoaded(async () => {
-    console.log('sd-webui-3d-open-pose-editor: onUiLoaded')
+    console.debug('sd-webui-3d-open-pose-editor: onUiLoaded')
 
     // Define functions to be called from Python.
     window.openpose3d = {

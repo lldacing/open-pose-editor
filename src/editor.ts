@@ -23,7 +23,7 @@ import { TransformControls } from 'three/examples/jsm/controls/TransformControls
 import { CCDIKSolver } from './utils/CCDIKSolver'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import {
-    BodyControlor,
+    BodyController,
     BodyData,
     CloneBody,
     GetExtremityMesh,
@@ -307,7 +307,7 @@ export class BodyEditor {
         this.transformControl.setMode('rotate') //旋转
         this.transformControl.setSize(0.4)
         this.transformControl.setSpace('local')
-        this.registerTranformControlEvent()
+        this.registerTransformControlEvent()
         this.scene.add(this.transformControl)
 
         this.previewRenderer = new PreviewRenderer({
@@ -358,13 +358,13 @@ export class BodyEditor {
         this.renderer.dispose()
         this.outputRenderer.dispose()
 
-        console.log('BodyEditor disponse')
+        console.debug('BodyEditor disponse')
     }
 
     commandHistory: Command[] = []
     historyIndex = -1
     pushCommand(cmd: Command) {
-        console.log('pushCommand')
+        console.debug('pushCommand')
         if (this.historyIndex != this.commandHistory.length - 1)
             this.commandHistory = this.commandHistory.slice(
                 0,
@@ -377,7 +377,7 @@ export class BodyEditor {
     CreateTransformCommand(obj: Object3D, _old: TransformValue): Command {
         const oldValue = _old
         const newValue = GetTransformValue(obj)
-        const controlor = new BodyControlor(this.getBodyByPart(obj)!)
+        const controlor = new BodyController(this.getBodyByPart(obj)!)
         return {
             execute: () => {
                 obj.position.copy(newValue.position)
@@ -397,7 +397,7 @@ export class BodyEditor {
     CreateAllTransformCommand(obj: Object3D, _old: BodyData): Command {
         const oldValue = _old
         const body = this.getBodyByPart(obj)!
-        const controlor = new BodyControlor(body)
+        const controlor = new BodyController(body)
         const newValue = controlor.GetBodyData()
 
         return {
@@ -419,7 +419,7 @@ export class BodyEditor {
             },
             undo: () => {
                 obj.removeFromParent()
-                this.DetachTransfromControl()
+                this.DetachTransformControl()
             },
         }
     }
@@ -428,7 +428,7 @@ export class BodyEditor {
         return {
             execute: () => {
                 obj.removeFromParent()
-                this.DetachTransfromControl()
+                this.DetachTransformControl()
             },
             undo: () => {
                 this.scene.add(obj)
@@ -437,7 +437,7 @@ export class BodyEditor {
     }
 
     Undo() {
-        console.log('Undo', this.historyIndex)
+        console.debug('Undo', this.historyIndex)
 
         if (this.historyIndex >= 0) {
             const cmd = this.commandHistory[this.historyIndex]
@@ -447,7 +447,7 @@ export class BodyEditor {
     }
 
     Redo() {
-        console.log('Redo', this.historyIndex)
+        console.debug('Redo', this.historyIndex)
 
         if (this.historyIndex < this.commandHistory.length - 1) {
             const cmd = this.commandHistory[this.historyIndex + 1]
@@ -487,7 +487,7 @@ export class BodyEditor {
         }
     }
 
-    registerTranformControlEvent() {
+    registerTransformControlEvent() {
         let oldTransformValue: TransformValue = {
             scale: new THREE.Vector3(),
             rotation: new THREE.Euler(),
@@ -498,7 +498,7 @@ export class BodyEditor {
             const body = this.getSelectedBody()
 
             if (body) {
-                new BodyControlor(body).UpdateBones()
+                new BodyController(body).UpdateBones()
             }
             // console.log('change')
             // this.renderer.render(this.scene, this.camera)
@@ -514,7 +514,7 @@ export class BodyEditor {
             if (part) {
                 oldTransformValue = GetTransformValue(part)
                 const body = this.getBodyByPart(part)!
-                oldBodyData = new BodyControlor(body).GetBodyData()
+                oldBodyData = new BodyController(body).GetBodyData()
             }
             this.orbitControls.enabled = false
         })
@@ -537,14 +537,14 @@ export class BodyEditor {
     }
 
     ikSolver?: CCDIKSolver
-    saveSelectedBodyControlor?: BodyControlor
+    saveSelectedBodyControlor?: BodyController
 
     updateSelectedBodyIKSolver() {
         const body = this.getSelectedBody() ?? undefined
 
         if (body !== this.saveSelectedBodyControlor) {
             this.saveSelectedBodyControlor = body
-                ? new BodyControlor(body!)
+                ? new BodyController(body!)
                 : undefined
             this.ikSolver = body
                 ? this.saveSelectedBodyControlor?.GetIKSolver()
@@ -557,12 +557,15 @@ export class BodyEditor {
     }
 
     render(width: number = this.Width, height: number = this.Height) {
+        // 更新骨骼IK解算器
         this.updateSelectedBodyIKSolver()
 
+        // 设置渲染器视口和裁剪区域
         this.renderer.setViewport(0, 0, width, height)
         this.renderer.setScissor(0, 0, width, height)
         this.renderer.setScissorTest(true)
 
+        // 强制渲染场景
         this.renderer.render(this.scene, this.camera)
     }
 
@@ -577,8 +580,12 @@ export class BodyEditor {
             : this.outputWidth
     }
     set OutputWidth(value: number) {
-        this.autoSize = false
-        this.outputWidth = value
+        if (this.outputWidth !== value) {
+            this.autoSize = false
+            this.outputWidth = value
+            // 触发输出尺寸更新事件
+            this.OutputSizeUpdateEventManager?.TriggerEvent()
+        }
     }
     get OutputHeight() {
         return this.autoSize
@@ -589,8 +596,12 @@ export class BodyEditor {
     }
 
     set OutputHeight(value: number) {
-        this.autoSize = false
-        this.outputHeight = value
+        if (this.outputHeight !== value) {
+            this.autoSize = false
+            this.outputHeight = value
+            // 触发输出尺寸更新事件
+            this.OutputSizeUpdateEventManager?.TriggerEvent()
+        }
     }
 
     renderPreview() {
@@ -598,14 +609,14 @@ export class BodyEditor {
         const outputHeight = this.OutputHeight
 
         const outputAspect = outputWidth / outputHeight
-        const maxOutoutAspect = 2
+        const maxOutputAspect = 2
         const [left, bottom, width, height] =
-            outputAspect > maxOutoutAspect
+            outputAspect > maxOutputAspect
                 ? [
-                      this.Width - 50 - 150 * maxOutoutAspect,
+                      this.Width - 50 - 150 * maxOutputAspect,
                       220,
-                      150 * maxOutoutAspect,
-                      (150 * maxOutoutAspect * outputHeight) / outputWidth,
+                      150 * maxOutputAspect,
+                      (150 * maxOutputAspect * outputHeight) / outputWidth,
                   ]
                 : [
                       this.Width - 50 - (150 * outputWidth) / outputHeight,
@@ -648,8 +659,11 @@ export class BodyEditor {
         const save = {
             aspect: this.camera.aspect,
         }
+        // 更新相机宽高比
         this.camera.aspect = outputWidth / outputHeight
         this.camera.updateProjectionMatrix()
+
+        // 设置离屏渲染器尺寸
         this.outputRenderer.setSize(outputWidth, outputHeight, true)
 
         render(outputWidth, outputHeight)
@@ -710,7 +724,7 @@ export class BodyEditor {
         return body
     }
 
-    SelectEventManager = new EditorEventManager<BodyControlor>()
+    SelectEventManager = new EditorEventManager<BodyController>()
     UnselectEventManager = new EditorEventManager<void>()
     ContextMenuEventManager = new EditorEventManager<{
         mouseX: number
@@ -718,9 +732,12 @@ export class BodyEditor {
     }>()
     PreviewEventManager = new EditorEventManager<boolean>()
     LockViewEventManager = new EditorEventManager<boolean>()
+    SceneReadyEventManager = new EditorEventManager<void>()
+    // 添加输出尺寸更新事件管理器
+    OutputSizeUpdateEventManager = new EditorEventManager<void>()
 
     triggerSelectEvent(body: Object3D) {
-        const c = new BodyControlor(body)
+        const c = new BodyController(body)
         this.SelectEventManager.TriggerEvent(c)
         this.UpdateBones()
     }
@@ -809,11 +826,11 @@ export class BodyEditor {
         const name = intersectedObject ? intersectedObject.name : ''
         let obj: Object3D | null = intersectedObject
 
-        console.log(obj?.name)
+        console.debug(obj?.name)
 
         if (this.IsClick) {
             if (event.button === 2 || event.which === 3) {
-                console.log('Right mouse button released')
+                console.debug('Right mouse button released')
                 this.ContextMenuEventManager.TriggerEvent({
                     mouseX: x,
                     mouseY: y,
@@ -822,7 +839,7 @@ export class BodyEditor {
             }
 
             if (!obj) {
-                this.DetachTransfromControl()
+                this.DetachTransformControl()
                 this.triggerUnselectEvent()
                 return
             }
@@ -838,12 +855,12 @@ export class BodyEditor {
                 }
 
                 if (obj) {
-                    if (IsTranslate(obj.name, this.FreeMode) === false)
+                    if (!IsTranslate(obj.name, this.FreeMode))
                         obj = this.getBodyByPart(obj)
                 }
 
                 if (obj) {
-                    console.log(obj.name)
+                    console.debug(obj.name)
                     this.transformControl.setMode('translate')
                     this.transformControl.setSpace('world')
                     this.transformControl.attach(obj)
@@ -861,7 +878,7 @@ export class BodyEditor {
                 }
 
                 if (obj) {
-                    console.log(obj.name)
+                    console.debug(obj.name)
 
                     if (IsTranslate(obj.name)) {
                         this.transformControl.setMode('translate')
@@ -919,8 +936,8 @@ export class BodyEditor {
     onlyShowSkeleton() {
         const recoveryArr: Object3D[] = []
         this.traverseBodies((o) => {
-            if (IsSkeleton(o.name) === false) {
-                if (o.visible == true) {
+            if (!IsSkeleton(o.name)) {
+                if (o.visible) {
                     o.visible = false
                     recoveryArr.push(o)
                 }
@@ -936,7 +953,7 @@ export class BodyEditor {
         const recoveryArr: Object3D[] = []
         this.scene.traverse((o) => {
             if (IsMask(o.name)) {
-                console.log(o.name)
+                console.debug(o.name)
                 o.visible = true
                 recoveryArr.push(o)
             }
@@ -947,7 +964,7 @@ export class BodyEditor {
         }
     }
 
-    hideSkeleten() {
+    hideSkeleton() {
         const map = new Map<Object3D, Object3D | null>()
 
         this.GetBodies().forEach((o) => {
@@ -967,7 +984,7 @@ export class BodyEditor {
     GetBodies() {
         return this.scene.children.filter((o) => o?.name === 'torso')
     }
-    showSkeleten(map: Map<Object3D, Object3D | null>) {
+    showSkeleton(map: Map<Object3D, Object3D | null>) {
         for (const [k, v] of map.entries()) {
             v?.attach(k)
         }
@@ -1070,7 +1087,7 @@ export class BodyEditor {
 
         this.camera.near = Math.max(minDis - 20, 0)
         this.camera.far = Math.max(maxDis + 20, 20)
-        console.log('camera', this.camera.near, this.camera.far)
+        console.debug('camera', this.camera.near, this.camera.far)
 
         this.camera.updateProjectionMatrix()
         return () => {
@@ -1081,11 +1098,14 @@ export class BodyEditor {
     }
 
     Capture() {
+        // 隐藏骨骼只显示 extremities
         const restore = this.onlyShowSkeleton()
 
+        // 强制渲染输出
         this.renderOutput()
         const imgData = this.getOutputPNG()
 
+        // 恢复显示骨骼
         restore()
 
         return imgData
@@ -1097,9 +1117,13 @@ export class BodyEditor {
         const outputWidth = this.OutputWidth * scale
         const outputHeight = this.OutputHeight * scale
 
+        // 确保使用有效的尺寸进行渲染
+        const renderWidth = outputWidth > 0 ? outputWidth : 512;
+        const renderHeight = outputHeight > 0 ? outputHeight : 512;
+
         this.previewRenderer.render(
-            outputWidth,
-            outputHeight,
+            renderWidth,
+            renderHeight,
             this.cameraDataOfView
         )
     }
@@ -1145,7 +1169,7 @@ export class BodyEditor {
         const part = this.getSelectedPart()
 
         if (part) {
-            this.DetachTransfromControl()
+            this.DetachTransformControl()
             return () => {
                 this.transformControl.attach(part)
             }
@@ -1169,26 +1193,31 @@ export class BodyEditor {
     }
     MakeImages() {
         this.renderer.setClearColor(0x000000)
+        this.outputRenderer.setClearColor(0x000000)
 
         const restoreHelper = this.changeHelper()
 
-        const restoreTransfromControl = this.changeTransformControl()
+        const restoreTransformControl = this.changeTransformControl()
         const restoreView = this.changeView()
+
+        // 强制更新一次渲染
+        this.renderer.render(this.scene, this.camera)
 
         const poseImage = this.Capture()
 
         /// begin
-        const map = this.hideSkeleten()
+        const map = this.hideSkeleton()
         const depthImage = this.CaptureDepth()
         const normalImage = this.CaptureNormal()
         const cannyImage = this.CaptureCanny()
-        this.showSkeleten(map)
+        this.showSkeleton(map)
         /// end
 
         this.renderer.setClearColor(0x000000, 0)
-        restoreHelper()
+        this.outputRenderer.setClearColor(0x000000, 0)
 
-        restoreTransfromControl()
+        restoreHelper()
+        restoreTransformControl()
         restoreView()
 
         const result = {
@@ -1288,9 +1317,9 @@ export class BodyEditor {
 
         if (obj) {
             this.pushCommand(this.CreateRemoveBodyCommand(obj))
-            console.log(obj.name)
+            console.debug(obj.name)
             obj.removeFromParent()
-            this.DetachTransfromControl()
+            this.DetachTransformControl()
         }
     }
 
@@ -1373,11 +1402,13 @@ export class BodyEditor {
     FreeMode = true
 
     get Width() {
-        return this.renderer.domElement.clientWidth
+        const clientWidth = this.renderer.domElement.clientWidth;
+        return clientWidth > 0 ? clientWidth : 512; // 默认宽度512
     }
 
     get Height() {
-        return this.renderer.domElement.clientHeight
+        const clientHeight = this.renderer.domElement.clientHeight;
+        return clientHeight > 0 ? clientHeight : 512; // 默认高度512
     }
 
     onlyHand = false
@@ -1417,14 +1448,20 @@ export class BodyEditor {
         if (size.width == this.Width && size.height === this.Height) return
 
         const canvas = this.renderer.domElement
-        if (canvas.clientWidth == 0 || canvas.clientHeight == 0) return
-        this.camera.aspect = canvas.clientWidth / canvas.clientHeight
+        // 即使clientWidth或clientHeight为0也继续处理
+        if (canvas.clientWidth == 0 || canvas.clientHeight == 0) {
+            // 使用默认尺寸
+            this.camera.aspect = this.Width / this.Height
+        } else {
+            this.camera.aspect = canvas.clientWidth / canvas.clientHeight
+        }
 
         this.camera.updateProjectionMatrix()
 
-        // console.log(canvas.clientWidth, canvas.clientHeight)
-        this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false)
-        // console.log(this.Width, this.Height)
+        // 使用计算后的Width和Height而不是canvas尺寸
+        this.renderer.setSize(this.Width, this.Height, false)
+
+        this.OutputSizeUpdateEventManager.TriggerEvent()
     }
 
     initEdgeComposer() {
@@ -1539,7 +1576,7 @@ void main() {
     }
     GetSceneData() {
         const bodies = this.GetBodies().map((o) =>
-            new BodyControlor(o).GetBodyData()
+            new BodyController(o).GetBodyData()
         )
 
         const data = {
@@ -1563,7 +1600,7 @@ void main() {
             header: 'Openpose Editor by Yu Zhu',
             version: __APP_VERSION__,
             object: {
-                hand: new BodyControlor(body).GetHandData(
+                hand: new BodyController(body).GetHandData(
                     hand.name === 'left_hand' ? 'left_hand' : 'right_hand'
                 ),
             },
@@ -1615,7 +1652,7 @@ void main() {
 
         if (!hand || !body) throw new Error('!hand || !body')
 
-        new BodyControlor(body).RestoreHand(
+        new BodyController(body).RestoreHand(
             hand.name == 'left_hand' ? 'left_hand' : 'right_hand',
             handData
         )
@@ -1633,7 +1670,7 @@ void main() {
     CreateBodiesFromData(bodies: BodyData[]) {
         return bodies.map((data) => {
             const body = CloneBody()!
-            new BodyControlor(body).RestoreBody(data)
+            new BodyController(body).RestoreBody(data)
             return body
         })
     }
@@ -1664,12 +1701,38 @@ void main() {
 
             if (bodiesObject.length > 0) this.scene.add(...bodiesObject)
             for (const body of bodiesObject) {
-                new BodyControlor(body).ResetAllTargetsPosition()
+                new BodyController(body).ResetAllTargetsPosition()
             }
             this.RestoreCamera(camera)
         } catch (error: any) {
             Oops(error)
             console.error(error)
+        }
+    }
+    IsSceneReady(): boolean {
+        try {
+            // 检查是否有身体对象
+            const bodies = this.GetBodies();
+            if (bodies.length === 0) return false;
+
+            // 检查第一个身体对象是否包含必要的部分
+            const body = bodies[0];
+            let hasHand = false;
+            let hasFoot = false;
+
+            body.traverse((obj) => {
+                if (obj.name === 'left_hand' || obj.name === 'right_hand') {
+                    hasHand = true;
+                }
+                if (obj.name === 'left_foot' || obj.name === 'right_foot') {
+                    hasFoot = true;
+                }
+            });
+
+            // 确保至少有一个手部和一个足部对象
+            return hasHand && hasFoot;
+        } catch (e) {
+            return false;
         }
     }
     ResetScene() {
@@ -1681,6 +1744,19 @@ void main() {
                 this.scene.add(body)
                 this.dlight.target = body
             }
+
+            // 检查场景是否真正准备好
+            const checkAndTrigger = () => {
+                if (this.IsSceneReady()) {
+                    console.debug('场景已准备好')
+                    this.SceneReadyEventManager.TriggerEvent()
+                } else {
+                    // 如果还没准备好，等待下一帧再检查
+                    requestAnimationFrame(checkAndTrigger)
+                }
+            }
+
+            requestAnimationFrame(checkAndTrigger)
         } catch (error: any) {
             Oops(error)
             console.error(error)
@@ -1772,22 +1848,22 @@ void main() {
 
         if (!body) return
 
-        const controlor = new BodyControlor(body)
-        const old: BodyData = controlor.GetBodyData()
-        controlor.SetPose(poseData)
+        const controller = new BodyController(body)
+        const old: BodyData = controller.GetBodyData()
+        controller.SetPose(poseData)
         this.pushCommand(this.CreateAllTransformCommand(body, old))
     }
     async SetBlazePose(positions: [number, number, number][]) {
         const body = await this.GetBodyToSetPose()
         if (!body) return
 
-        const controlor = new BodyControlor(body)
-        const old: BodyData = controlor.GetBodyData()
-        controlor.SetBlazePose(positions)
+        const controller = new BodyController(body)
+        const old: BodyData = controller.GetBodyData()
+        controller.SetBlazePose(positions)
         this.pushCommand(this.CreateAllTransformCommand(body, old))
     }
 
-    DetachTransfromControl() {
+    DetachTransformControl() {
         this.transformControl.detach()
         this.triggerUnselectEvent()
     }

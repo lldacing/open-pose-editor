@@ -19,7 +19,7 @@ export async function LoadFBXFile(
             },
             // called when loading is in progresses
             function (xhr) {
-                console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+                console.debug((xhr.loaded / xhr.total) * 100 + '% loaded')
                 onLoading?.((xhr.loaded / xhr.total) * 100)
             },
             // called when loading has errors
@@ -46,7 +46,7 @@ export async function LoadObjFile(url: string): Promise<THREE.Group> {
             },
             // called when loading is in progresses
             function (xhr) {
-                console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+                console.debug((xhr.loaded / xhr.total) * 100 + '% loaded')
             },
             // called when loading has errors
             function (error) {
@@ -69,7 +69,7 @@ export async function LoadGLTFile(url: string): Promise<GLTF> {
             },
             // called when loading is in progresses
             function (xhr) {
-                console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
+                console.debug((xhr.loaded / xhr.total) * 100 + '% loaded')
             },
             // called when loading has errors
             function (error) {

@@ -64,14 +64,14 @@ function UpdateLink4(
     create = false
 ) {
     const startPosition = new THREE.Vector3(0, 0, 0)
-    const endPostion = endObject.position
-    const distance = startPosition.distanceTo(endPostion)
+    const endPosition = endObject.position
+    const distance = startPosition.distanceTo(endPosition)
     // 将拉伸后的球体放在中点，并计算旋转轴和角度
-    const origin = startPosition.clone().add(endPostion).multiplyScalar(0.5)
+    const origin = startPosition.clone().add(endPosition).multiplyScalar(0.5)
 
     // Another method
     //     new THREE.Quaternion().setFromUnitVectors(...)
-    const v = endPostion.clone().sub(startPosition)
+    const v = endPosition.clone().sub(startPosition)
     const unit = new THREE.Vector3(1, 0, 0)
     const axis = unit.clone().cross(v)
     const angle = unit.clone().angleTo(v)
@@ -288,7 +288,7 @@ export function CreateTemplateBody() {
         )
     )
 
-    new BodyControlor(torso).Create()
+    new BodyController(torso).Create()
     templateBody = torso
 }
 
@@ -348,7 +348,7 @@ export function IsBone(name: string) {
     return IsMatchBonePrefix(name)
 }
 
-const pickableObjectNames: string[] = [
+const pickleObjectNames: string[] = [
     'torso',
     'nose',
     'neck',
@@ -373,7 +373,7 @@ const pickableObjectNames: string[] = [
 
 export function IsPickable(name: string, isFreeMode = false) {
     if (isFreeMode && OpenposeKeypoints.includes(name)) return true
-    if (pickableObjectNames.includes(name)) return true
+    if (pickleObjectNames.includes(name)) return true
     if (IsBone(name)) return true
     return false
 }
@@ -471,7 +471,7 @@ export interface HandData {
     >
 }
 
-export class BodyControlor {
+export class BodyController {
     body: Object3D
     part: Record<ControlPartName, Object3D> = {} as any
     constructor(o: Object3D) {

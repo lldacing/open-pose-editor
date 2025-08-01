@@ -86,7 +86,7 @@ export async function LoadFoot(
 ) {
     const fbx = await LoadFBXFile(footFBXFileUrl, onLoading)
 
-    console.log(fbx)
+    console.debug(fbx)
     // fbx.scale.multiplyScalar(0.001)
 
     const mesh = FindObjectItem<THREE.SkinnedMesh>(fbx, FootModelInfo.meshName)!
@@ -95,7 +95,7 @@ export async function LoadFoot(
     // const helper = new THREE.SkeletonHelper(mesh.parent!);
     // this.scene.add(helper);
 
-    console.log(mesh.skeleton.bones)
+    console.debug(mesh.skeleton.bones)
     mesh.skeleton.bones.forEach((o) => {
         if (o.name !== 'FootBone2') return
         const point = new THREE.Mesh(

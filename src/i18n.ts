@@ -34,7 +34,7 @@ const options = {
 }
 
 i18next.use(LanguageDetector).init({
-    // lng: 'en', // if you're using a language detector, do not define the lng option
+    lng: 'zh', // if you're using a language detector, do not define the lng option
     detection: options,
     fallbackLng: 'en',
     debug: true,

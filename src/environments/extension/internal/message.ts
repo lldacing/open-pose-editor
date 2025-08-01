@@ -18,11 +18,11 @@ export const InitMessageListener = () => {
         const { data } = event
         if (data && data.cmd && data.cmd == 'openpose-3d' && data.method) {
             const method = data.method
-            console.log('Method', method, event)
+            console.debug('Method', method, event)
             if (data.type == 'return') {
                 MessageReturnHandler[method]?.(data.payload)
             } else if (data.type == 'event') {
-                console.log(MessageEventHandler)
+                console.debug(MessageEventHandler)
                 MessageEventHandler[method]?.(data.payload)
             }
         }
@@ -46,11 +46,11 @@ export function InvokeCommand(method: string, ...args: any[]) {
             })
         }, 1000)
 
-        const onReutrn = (arg: any) => {
+        const onReturn = (arg: any) => {
             clearTimeout(id)
             resolve(arg)
         }
-        MessageReturnHandler[method] = onReutrn
+        MessageReturnHandler[method] = onReturn
 
         poseMessage({
             cmd: 'openpose-3d',
