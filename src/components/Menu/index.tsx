@@ -37,6 +37,10 @@ const MenubarDemo: React.FC<{
     const forceUpdate = useForceUpdate()
     const helper = useMemo(() => new Helper(editor), [editor])
     const { current, changeLanguage, languagList } = useLanguageSelect()
+    
+    // 为生成按钮添加状态
+    const [generateHover, setGenerateHover] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
         const show = (data: { mouseX: number; mouseY: number }) => {
@@ -91,14 +95,14 @@ const MenubarDemo: React.FC<{
                         >
                             {i18n.t('Save Gesture')}
                         </Menubar.Item>
-                        <Menubar.Item
+                        {/*<Menubar.Item
                             className={MenubarItem}
                             onSelect={() => {
                                 helper.GenerateSceneURL()
                             }}
                         >
                             {i18n.t('Generate Scene URL')}
-                        </Menubar.Item>
+                        </Menubar.Item>*/}
                         <Menubar.Separator className={MenubarSeparator} />
                         <Menubar.Item
                             className={MenubarItem}
@@ -392,7 +396,14 @@ const MenubarDemo: React.FC<{
             <Menubar.Menu>
                 <Menubar.Trigger
                     className={classNames(MenubarTrigger, Blue)}
+                    style={{
+                        backgroundColor: generateHover ? '#1967D2' : '#4F86C6',
+                        transform: isGenerating ? 'scale(0.95)' : 'scale(1)',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer'
+                    }}
                     onClick={async () => {
+                        setIsGenerating(true);
                         const image = editor.MakeImages()
                         const result = Object.fromEntries(
                             Object.entries(image).map(([name, imgData]) => [
@@ -404,6 +415,13 @@ const MenubarDemo: React.FC<{
                             ])
                         )
                         onScreenShot(result)
+                        // 模拟按钮点击后的恢复状态
+                        setTimeout(() => setIsGenerating(false), 300);
+                    }}
+                    onMouseEnter={() => setGenerateHover(true)}
+                    onMouseLeave={() => {
+                        setGenerateHover(false);
+                        setIsGenerating(false);
                     }}
                 >
                     {i18n.t('Generate')}

@@ -14,6 +14,7 @@ import {
 } from '@radix-ui/react-icons'
 import { getCurrentTime } from '../../utils/time'
 import useMessageDispatch, {sendToAll} from '../../hooks/useMessageDispatch'
+import i18n from '../../i18n'
 
 const { app, threejsCanvas, gallery, background } = classes
 
@@ -50,6 +51,15 @@ const PreviewCanvas = React.forwardRef<
 >(({ isLock, enable, eyeOpen, onChange, onRestore, onRun, onEye }, ref) => {
     const Icon = isLock ? LockClosedIcon : LockOpen2Icon
     const ToggleImagesIcon = eyeOpen ? EyeOpenIcon : EyeNoneIcon
+    
+    // 为生成按钮添加状态
+    const [isRunning, setIsRunning] = useState(false);
+    const [runHover, setRunHover] = useState(false);
+    
+    // 为其他按钮添加状态
+    const [eyeHover, setEyeHover] = useState(false);
+    const [lockHover, setLockHover] = useState(false);
+    const [resetHover, setResetHover] = useState(false);
 
     return (
         <div
@@ -70,59 +80,102 @@ const PreviewCanvas = React.forwardRef<
                     maxWidth: 300,
                 }}
             ></canvas>
-            <ToggleImagesIcon
+            <div
                 style={{
                     position: 'absolute',
                     top: -10,
                     right: 5,
-                    backgroundColor: 'white',
+                    backgroundColor: eyeHover ? '#e0e0e0' : 'white',
                     borderRadius: 10,
                     padding: 5,
+                    cursor: 'pointer',
+                    transform: eyeHover ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'all 0.2s ease',
+                    boxShadow: eyeHover ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
                 }}
                 onClick={() => {
                     onEye()
                 }}
-            />
-            <ResumeIcon
+                onMouseEnter={() => setEyeHover(true)}
+                onMouseLeave={() => setEyeHover(false)}
+                title={i18n.t('Toggle Images Visibility')?.toString() || 'Toggle Images Visibility'}
+            >
+                <ToggleImagesIcon style={{ display: 'block' }} />
+            </div>
+            <div
                 style={{
                     position: 'absolute',
                     top: 20,
                     right: 5,
-                    backgroundColor: 'white',
+                    backgroundColor: runHover ? '#e0e0e0' : 'white',
                     borderRadius: 10,
                     padding: 5,
+                    cursor: 'pointer',
+                    transform: isRunning ? 'scale(0.95)' : (runHover ? 'scale(1.1)' : 'scale(1)'),
+                    transition: 'all 0.2s ease',
+                    boxShadow: runHover ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
                 }}
                 onClick={() => {
-                    onRun()
+                    setIsRunning(true);
+                    onRun();
+                    // 模拟按钮点击后的恢复状态
+                    setTimeout(() => setIsRunning(false), 300);
                 }}
-            ></ResumeIcon>
-            <Icon
+                onMouseEnter={() => setRunHover(true)}
+                onMouseLeave={() => {
+                    setRunHover(false);
+                    setIsRunning(false);
+                }}
+                title={i18n.t('Generate Images')?.toString() || 'Generate Images'}
+            >
+                <ResumeIcon style={{ display: 'block' }} />
+            </div>
+            <div
                 style={{
                     position: 'absolute',
                     top: 50,
                     right: 5,
-                    backgroundColor: 'white',
+                    backgroundColor: lockHover ? '#e0e0e0' : 'white',
                     borderRadius: 10,
                     padding: 5,
+                    cursor: 'pointer',
+                    transform: lockHover ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'all 0.2s ease',
+                    boxShadow: lockHover ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
                 }}
                 onClick={() => {
                     onChange(!isLock)
                 }}
-            ></Icon>
+                onMouseEnter={() => setLockHover(true)}
+                onMouseLeave={() => setLockHover(false)}
+                title={(isLock ? i18n.t('Unlock View') : i18n.t('Lock View'))?.toString() || (isLock ? 'Unlock View' : 'Lock View')}
+            >
+                <Icon style={{ display: 'block' }} />
+            </div>
 
-            <ResetIcon
+            <div
                 style={{
                     position: 'absolute',
                     top: 80,
                     right: 5,
-                    backgroundColor: !isLock ? 'gray' : 'white',
+                    backgroundColor: !isLock ? 'gray' : (resetHover ? '#e0e0e0' : 'white'),
                     borderRadius: 10,
                     padding: 5,
+                    cursor: !isLock ? 'not-allowed' : 'pointer',
+                    transform: resetHover ? 'scale(1.1)' : 'scale(1)',
+                    transition: 'all 0.2s ease',
+                    boxShadow: resetHover ? '0 2px 4px rgba(0,0,0,0.2)' : 'none',
+                    opacity: !isLock ? 0.5 : 1,
                 }}
                 onClick={() => {
                     if (isLock) onRestore()
                 }}
-            ></ResetIcon>
+                onMouseEnter={() => isLock && setResetHover(true)}
+                onMouseLeave={() => setResetHover(false)}
+                title={i18n.t('Restore View')?.toString() || 'Restore View'}
+            >
+                <ResetIcon style={{ display: 'block' }} />
+            </div>
         </div>
     )
 })
