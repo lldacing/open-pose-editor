@@ -1580,7 +1580,7 @@ void main() {
         )
 
         const data = {
-            header: 'Openpose Editor by Yu Zhu',
+            header: 'Openpose Editor by Yu Zhu, Magic revision',
             version: __APP_VERSION__,
             object: {
                 bodies: bodies,
