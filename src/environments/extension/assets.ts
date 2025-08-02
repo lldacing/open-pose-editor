@@ -1,13 +1,13 @@
 const files: Record<string, string> = {
-    'models/hand.fbx': '../ComfyUI_3dPoseEditor/assets/hand.fbx',
-    'models/foot.fbx': '../ComfyUI_3dPoseEditor/assets/foot.fbx',
-    'src/poses/data.bin': '../ComfyUI_3dPoseEditor/assets/data.bin',
-    'pose_landmark_full.tflite':'../ComfyUI_3dPoseEditor/assets/pose/pose_landmark_full.tflite',
-    'pose_solution_packed_assets.data':'../ComfyUI_3dPoseEditor/assets/pose/pose_solution_packed_assets.data',
-    'pose_solution_packed_assets_loader.json':'../ComfyUI_3dPoseEditor/assets/pose/pose_solution_packed_assets_loader.json',
-    'pose_solution_simd_wasm_bin.js':'../ComfyUI_3dPoseEditor/assets/pose/pose_solution_simd_wasm_bin.js',
-    'pose_solution_simd_wasm_bin.wasm':'../ComfyUI_3dPoseEditor/assets/pose/pose_solution_simd_wasm_bin.wasm',
-    'pose_web.binarypb': '../ComfyUI_3dPoseEditor/assets/pose/pose_web.binarypb',
+    'models/hand.fbx': './assets/hand.fbx',
+    'models/foot.fbx': './assets/foot.fbx',
+    'src/poses/data.bin': './assets/data.bin',
+    'pose_landmark_full.tflite':'./assets/pose/pose_landmark_full.tflite',
+    'pose_solution_packed_assets.data':'./assets/pose/pose_solution_packed_assets.data',
+    'pose_solution_packed_assets_loader.js':'./assets/pose/pose_solution_packed_assets_loader.js',
+    'pose_solution_simd_wasm_bin.js':'./assets/pose/pose_solution_simd_wasm_bin.js',
+    'pose_solution_simd_wasm_bin.wasm':'./assets/pose/pose_solution_simd_wasm_bin.wasm',
+    'pose_web.binarypb': './assets/pose/pose_web.binarypb',
 }
 
 async function loadAssets() {

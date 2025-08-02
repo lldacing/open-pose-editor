@@ -51,7 +51,7 @@ pose.setOptions({
     minTrackingConfidence: 0.5,
 })
 
-export function DetectPosefromImage(image: HTMLImageElement): Promise<Results> {
+export function DetectPoseFromImage(image: HTMLImageElement): Promise<Results> {
     return new Promise((resolve, reject) => {
         let isException = false
         const id = setTimeout(() => {

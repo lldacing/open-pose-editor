@@ -92,21 +92,31 @@ const MyContextMenu = NiceModal.create<{
                 </div>
                 <div
                     className={ContextMenuItem}
-                    onClick={() => helper.DetectFromImage(onChangeBackground)}
+                    onClick={async () => {
+                        await helper.DetectFromImage(onChangeBackground);
+                    }}
                 >
                     {i18n.t('Detect From Image')}
                 </div>
                 {IsChina() ? (
                     <div
                         className={ContextMenuItem}
-                        onClick={() => {
+                        onClick={async () => {
                             SetCDNBase(false)
-                            helper.DetectFromImage(onChangeBackground)
+                            await helper.DetectFromImage(onChangeBackground);
                         }}
                     >
                         {i18n.t('Detect From Image') + ' [中国]'}
                     </div>
                 ) : undefined}
+                <div
+                    className={ContextMenuItem}
+                    onClick={async () => {
+                        await helper.DetectFromCanvasBackground();
+                    }}
+                >
+                    {i18n.t('Detect From Canvas Background')}
+                </div>
             </div>
         </div>
     )

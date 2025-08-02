@@ -113,23 +113,29 @@ const MenubarDemo: React.FC<{
                         <Menubar.Separator className={MenubarSeparator} />
                         <Menubar.Item
                             className={MenubarItem}
-                            onSelect={() =>
-                                helper.DetectFromImage(onChangeBackground)
-                            }
+                            onSelect={() => helper.DetectFromImage(onChangeBackground)}
                         >
                             {i18n.t('Detect From Image')}
                         </Menubar.Item>
                         {IsChina() ? (
                             <Menubar.Item
                                 className={MenubarItem}
-                                onSelect={() => {
+                                onSelect={async () => {
                                     SetCDNBase(false)
-                                    helper.DetectFromImage(onChangeBackground)
+                                    await helper.DetectFromImage(onChangeBackground)
                                 }}
                             >
                                 {i18n.t('Detect From Image') + ' [中国]'}
                             </Menubar.Item>
                         ) : undefined}
+                        <Menubar.Item
+                            className={MenubarItem}
+                            onSelect={async () => {
+                                await helper.DetectFromCanvasBackground();
+                            }}
+                        >
+                            {i18n.t('Detect From Canvas Background')}
+                        </Menubar.Item>
                         <Menubar.Item
                             className={MenubarItem}
                             onSelect={() => helper.SetRandomPose()}

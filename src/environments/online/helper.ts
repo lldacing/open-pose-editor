@@ -4,7 +4,7 @@ import {
     uploadImage,
     uploadJson,
 } from '../../utils/transfer'
-import { DetectPosefromImage } from '../../utils/detect'
+import { DetectPoseFromImage } from '../../utils/detect'
 
 import { BodyController } from '../../body'
 
@@ -23,71 +23,139 @@ export class Helper {
         this.editor = editor
     }
 
-    async DetectFromImage(onChangeBackground: (url: string) => void) {
-        if (IsQQBrowser()) {
-            Oops('QQ浏览器暂不支持图片检测，请使用其他浏览器试试')
-            return
-        }
-        const body = await this.editor.GetBodyToSetPose()
+    /**
+     * 确保场景中有可用的骨架用于姿势检测
+     */
+    private async ensureBodyForPoseDetection(): Promise<boolean> {
+        let body = await this.editor.GetBodyToSetPose()
         if (!body) {
-            ShowToast({ title: i18n.t('Please select a skeleton!!') })
-            return
+            // 创建新骨架
+            this.editor.CopySelectedBody()
+            // 再次获取新创建的骨架
+            body = await this.editor.GetBodyToSetPose()
+            // 如果还是没有骨架，提示错误
+            if (!body) {
+                await ShowToast({ title: i18n.t('Please select a skeleton!!') })
+                return false
+            }
         }
+        return true
+    }
 
+    /**
+     * 执行姿势检测的核心逻辑
+     */
+    private async performPoseDetection(image: HTMLImageElement) {
         const loading = GetLoading(500)
 
         try {
-            const dataUrl = await uploadImage()
-
-            if (!dataUrl) return
-
-            const image = await getImage(dataUrl)
-            onChangeBackground(dataUrl)
-
             loading.show({ title: i18n.t('Downloading MediaPipe Pose Model') })
-            const result = await DetectPosefromImage(image)
+            const result = await DetectPoseFromImage(image)
             loading.hide()
 
             if (result) {
                 if (!result.poseWorldLandmarks)
-                    throw new Error(JSON.stringify(result))
+                    throw new Error(JSON.stringify(result));
 
                 const positions: [number, number, number][] =
                     result.poseWorldLandmarks.map(({ x, y, z }) => [
                         x * 100,
                         -y * 100,
                         -z * 100,
-                    ])
+                    ]);
 
-                // this.drawPoseData(
-                //     result.poseWorldLandmarks.map(({ x, y, z }) =>
-                //         new THREE.Vector3().fromArray([x * 100, -y * 100, -z * 100])
-                //     )
-                // )
-
-                await this.editor.SetBlazePose(positions)
-                return
+                await this.editor.SetBlazePose(positions);
+                return true;
             }
         } catch (error) {
-            loading.hide()
+            loading.hide();
             if (error === 'Timeout') {
                 if (IsChina())
                     Oops(
-                        '下载超时，请点击“从图片中检测 [中国]”或者开启魔法，再试一次。' +
-                            '\n' +
-                            error
+                        '下载超时，请点击"从图片中检测 [中国]"或者开启魔法，再试一次。' +
+                        '\n' +
+                        error
                     )
-                else Oops(error)
+                else Oops(error);
             } else
                 Oops(
                     i18n.t(
                         'If you try to detect anime characters, you may get an error. Please try again with photos.'
                     ) +
-                        '\n' +
-                        error
-                )
-            console.error(error)
-            return null
+                    '\n' +
+                    error
+                );
+            console.error(error);
+            return null;
+        }
+    }
+
+    /**
+     * 从背景图检测姿势的公共方法
+     */
+    async DetectFromCanvasBackground() {
+        // 获取editor实例
+        const editorInstance = this.editor;
+
+        // 创建一个临时div元素来帮助提取背景图片URL
+        const tempDiv = document.createElement('div');
+        tempDiv.style.backgroundImage = editorInstance.parentElem instanceof HTMLElement ?
+            getComputedStyle(editorInstance.parentElem).backgroundImage : '';
+
+        const backgroundImage = tempDiv.style.backgroundImage;
+
+        // 检查是否有背景图
+        if (backgroundImage && backgroundImage !== 'none') {
+            // 提取URL
+            const urlMatch = backgroundImage.match(/url\(["']?(.*?)["']?\)/);
+            if (urlMatch && urlMatch[1]) {
+                const imageUrl = urlMatch[1];
+
+                // 创建图片元素加载背景图
+                const image = new Image();
+                image.crossOrigin = 'anonymous';
+                image.onload = async () => {
+                    try {
+                        // 使用背景图进行检测
+                        await this.DetectFromImageBackground(image);
+                    } catch (error) {
+                        console.error('Detection from background image failed:', error);
+                    }
+                };
+                image.src = imageUrl;
+            }
+        }
+    }
+
+    async DetectFromImageBackground(image: HTMLImageElement) {
+        if (IsQQBrowser()) {
+            Oops('QQ浏览器暂不支持图片检测，请使用其他浏览器试试')
+            return
+        }
+        // 确保有可用的骨架进行姿势检测
+        const hasBody = await this.ensureBodyForPoseDetection();
+        if (!hasBody) return;
+
+        await this.performPoseDetection(image)
+    }
+
+    async DetectFromImage(onChangeBackground: (url: string) => void) {
+        if (IsQQBrowser()) {
+            Oops('QQ浏览器暂不支持图片检测，请使用其他浏览器试试')
+            return
+        }
+        // 确保有可用的骨架进行姿势检测
+        const hasBody = await this.ensureBodyForPoseDetection();
+        if (!hasBody) return;
+
+        const image = await uploadImage()
+        if (image) {
+            onChangeBackground(image)
+            const img = new Image()
+            img.onload = async () => {
+                await this.performPoseDetection(img)
+            }
+            img.src = image
         }
     }
 

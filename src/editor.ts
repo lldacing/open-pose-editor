@@ -2,14 +2,11 @@ import * as THREE from 'three'
 import {
     Bone,
     Material,
-    Mesh,
     MeshBasicMaterial,
     MeshDepthMaterial,
     MeshNormalMaterial,
     MeshPhongMaterial,
     Object3D,
-    Skeleton,
-    SkinnedMesh,
 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
@@ -32,7 +29,6 @@ import {
     IsFoot,
     IsHand,
     IsMask,
-    IsNeedSaveObject,
     IsPickable,
     IsSkeleton,
     IsTarget,
@@ -1840,8 +1836,7 @@ void main() {
     // }
     async GetBodyToSetPose() {
         const bodies = this.GetBodies()
-        const body = bodies.length == 1 ? bodies[0] : this.getSelectedBody()
-        return body
+        return bodies.length == 1 ? bodies[0] : this.getSelectedBody()
     }
     async SetPose(poseData: [number, number, number][]) {
         const body = await this.GetBodyToSetPose()
