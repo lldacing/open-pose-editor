@@ -37,6 +37,9 @@ export function useBodyEditor(
             parentElem: parent?.current ?? (document as any),
             statsElem: import.meta.env.DEV ? document.body : undefined,
         })
+        
+        // 将backgroundRef传递给BodyEditor实例
+        editor.backgroundRef = parent || undefined;
 
         setEditor(editor)
 

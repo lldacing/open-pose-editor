@@ -54,7 +54,8 @@ const MenubarDemo: React.FC<{
     }, [editor]);
     
     // 添加背景图检测按钮可用状态
-    const hasBackgroundImage = useBackgroundImage(editor);
+    const hasBackgroundImage = useBackgroundImage(editor); // 假设该 hook 已正确实现并接收 editor 作为参数
+    // 如果 hook 本身没有正确实现，请检查其实现文件以确保它处理了依赖项
 
     return (
         <Menubar.Root className={MenubarRoot} style={style}>

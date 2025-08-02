@@ -8,15 +8,10 @@ import {
     MeshPhongMaterial,
     Object3D,
 } from 'three'
+import { RefObject } from 'react'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls'
 
-// @ts-ignore
-// import {
-//     CCDIKHelper,
-//     CCDIKSolver,
-//     IKS,
-// } from 'three/examples/jsm/animate/CCDIKSolver'
 import { CCDIKSolver } from './utils/CCDIKSolver'
 import Stats from 'three/examples/jsm/libs/stats.module'
 import {
@@ -244,6 +239,8 @@ export class BodyEditor {
     paused = false
 
     parentElem: ParentElement
+    // 添加backgroundRef属性声明
+    backgroundRef: RefObject<HTMLDivElement> | undefined
 
     clearColor = 0xaaaaaa
     constructor({

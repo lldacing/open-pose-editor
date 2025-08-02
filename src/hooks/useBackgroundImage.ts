@@ -1,28 +1,56 @@
 import { useEffect, useState } from 'react';
 import { BodyEditor } from '../editor';
 
-export const useBackgroundImage = (editor: BodyEditor) => {
+/**
+ * 自定义Hook用于检测编辑器是否有背景图
+ * 使用BodyEditor的backgroundRef来检测背景图状态，避免使用定时器
+ * @param editor - BodyEditor实例
+ * @returns boolean - 是否有背景图
+ */
+export const useBackgroundImage = (editor: BodyEditor | undefined): boolean => {
     const [hasBackgroundImage, setHasBackgroundImage] = useState(false);
 
-    // 监听背景图变化
     useEffect(() => {
+        // 如果没有editor实例，则直接返回
+        if (!editor) return;
+
+        // 检查当前是否有背景图
         const checkBackgroundImage = () => {
-            if (editor && editor.parentElem instanceof HTMLElement) {
-                const computedStyle = getComputedStyle(editor.parentElem);
+            // 使用editor的backgroundRef来检查背景图
+            if (editor.backgroundRef?.current) {
+                const computedStyle = getComputedStyle(editor.backgroundRef.current);
                 const backgroundImage = computedStyle.backgroundImage;
-                setHasBackgroundImage(backgroundImage !== 'none' && backgroundImage !== '');
+                return backgroundImage !== 'none' && backgroundImage !== '';
             }
+            return false;
         };
 
-        // 初始检查
-        checkBackgroundImage();
+        // 初始化背景图状态检查
+        const initialHasImage = checkBackgroundImage();
+        setHasBackgroundImage(initialHasImage);
 
-        // 添加一个定时器，定期检查背景图状态，确保状态同步
-        const interval = setInterval(checkBackgroundImage, 1000);
+        // 创建MutationObserver来监听backgroundRef元素的样式变化
+        let observer: MutationObserver | null = null;
+        
+        if (editor.backgroundRef?.current) {
+            // 使用MutationObserver监听DOM变化
+            observer = new MutationObserver(() => {
+                const hasImage = checkBackgroundImage();
+                setHasBackgroundImage(hasImage);
+            });
+            
+            // 开始观察backgroundRef元素的属性变化
+            observer.observe(editor.backgroundRef.current, {
+                attributes: true,
+                attributeFilter: ['style']
+            });
+        }
 
+        // 清理函数
         return () => {
-            // 清除定时器
-            clearInterval(interval);
+            if (observer) {
+                observer.disconnect();
+            }
         };
     }, [editor]);
 
