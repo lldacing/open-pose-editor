@@ -6,6 +6,7 @@ import { BodyEditor } from '../../editor'
 import i18n, { IsChina } from '../../i18n'
 import { Helper } from '../../environments/online/helper'
 import { SetCDNBase } from '../../utils/detect'
+import { useBackgroundImage } from '../../hooks/useBackgroundImage'
 
 const { Root, ContextMenuContent, ContextMenuItem, RightSlot } = classes
 
@@ -16,6 +17,8 @@ const MyContextMenu = NiceModal.create<{
     onChangeBackground: (url: string) => void
 }>(({ editor, mouseX, mouseY, onChangeBackground }) => {
     const helper = useMemo(() => new Helper(editor), [editor])
+    
+    const hasBackgroundImage = useBackgroundImage(editor);
 
     const modal = useModal()
     return (
@@ -114,8 +117,24 @@ const MyContextMenu = NiceModal.create<{
                     onClick={async () => {
                         await helper.DetectFromCanvasBackground();
                     }}
+                    style={{ 
+                        opacity: hasBackgroundImage ? 1 : 0.5,
+                        cursor: hasBackgroundImage ? 'pointer' : 'not-allowed'
+                    }}
                 >
                     {i18n.t('Detect From Canvas Background')}
+                </div>
+                <div
+                    className={ContextMenuItem}
+                    onClick={() => {
+                        onChangeBackground('');
+                    }}
+                    style={{ 
+                        opacity: hasBackgroundImage ? 1 : 0.5,
+                        cursor: hasBackgroundImage ? 'pointer' : 'not-allowed'
+                    }}
+                >
+                    {i18n.t('Clear Background Image')}
                 </div>
             </div>
         </div>

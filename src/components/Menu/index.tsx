@@ -14,6 +14,7 @@ import { useLanguageSelect } from '../../hooks'
 import { ShowContextMenu } from '../ContextMenu'
 import { ShowDialog } from '../Dialog'
 import { SetCDNBase } from '../../utils/detect'
+import { useBackgroundImage } from '../../hooks/useBackgroundImage'
 
 const {
     MenubarRoot,
@@ -41,7 +42,7 @@ const MenubarDemo: React.FC<{
     // 为生成按钮添加状态
     const [generateHover, setGenerateHover] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
-
+    
     useEffect(() => {
         const show = (data: { mouseX: number; mouseY: number }) => {
             ShowContextMenu({ ...data, editor, onChangeBackground })
@@ -50,7 +51,10 @@ const MenubarDemo: React.FC<{
         return () => {
             editor?.ContextMenuEventManager.RemoveEventListener(show)
         }
-    }, [editor])
+    }, [editor]);
+    
+    // 添加背景图检测按钮可用状态
+    const hasBackgroundImage = useBackgroundImage(editor);
 
     return (
         <Menubar.Root className={MenubarRoot} style={style}>
@@ -133,6 +137,7 @@ const MenubarDemo: React.FC<{
                             onSelect={async () => {
                                 await helper.DetectFromCanvasBackground();
                             }}
+                            disabled={!hasBackgroundImage}
                         >
                             {i18n.t('Detect From Canvas Background')}
                         </Menubar.Item>
@@ -150,6 +155,15 @@ const MenubarDemo: React.FC<{
                             }}
                         >
                             {i18n.t('Set Background Image')}
+                        </Menubar.Item>
+                        <Menubar.Item
+                            className={MenubarItem}
+                            onSelect={() => {
+                                onChangeBackground('');
+                            }}
+                            disabled={!hasBackgroundImage}
+                        >
+                            {i18n.t('Clear Background Image')}
                         </Menubar.Item>
                         <Menubar.Item className={MenubarItem}>
                             v{__APP_VERSION__}
